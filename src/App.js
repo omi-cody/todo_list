@@ -1,11 +1,11 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter as Router, Routes } from 'react-router-dom';
-import Navbar from './components/navbar/Navbar';
+import Sidebar from './components/sidebar/Sidebar';
 
 function App() {
   return (
     <Router>
-      <Navbar></Navbar>
-      <Routes>{/* Define your routes here */}</Routes>
+      <Sidebar></Sidebar> <Routes>{/* Define your routes here */}</Routes>
     </Router>
   );
 }
