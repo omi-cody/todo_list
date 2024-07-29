@@ -199,25 +199,6 @@ const Sidebar = () => {
           </li>
         </ul>
       </aside>
-      {/* Main Component */}
-      <div className='main'>
-        <nav className='navbar navbar-expand px-3 border-bottom'>
-          {/* Button for sidebar toggle */}
-          <button
-            className='btn'
-            type='button'
-            onClick={() => setCollapsed(!collapsed)}>
-            <span className='navbar-toggler-icon'></span>
-          </button>
-        </nav>
-        <main className='content px-3 py-2'>
-          <div className='container-fluid'>
-            <div className='mb-3'>
-              <h3>Bootstrap Sidebar Tutorial</h3>
-            </div>
-          </div>
-        </main>
-      </div>
     </div>
   );
 };
