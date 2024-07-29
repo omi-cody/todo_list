@@ -82,12 +82,12 @@ const Navbar = () => {
                 </a>
               </li>
               <li className='nav-item'>
-                <a
+                <Link
                   className='nav-link me-2'
-                  href='#'>
+                  to='/signIn'>
                   <i className='fas fa-key opacity-6 text-dark me-1'></i>
                   Sign In
-                </a>
+                </Link>
               </li>
             </ul>
             <ul className='navbar-nav d-lg-flex d-none'>
