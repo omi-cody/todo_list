@@ -74,12 +74,12 @@ const Navbar = () => {
                 </Link>
               </li>
               <li className='nav-item'>
-                <a
+                <Link
                   className='nav-link me-2'
-                  href='#'>
+                  to='/signUp'>
                   <i className='fas fa-user-circle opacity-6 text-dark me-1'></i>
                   Sign Up
-                </a>
+                </Link>
               </li>
               <li className='nav-item'>
                 <Link

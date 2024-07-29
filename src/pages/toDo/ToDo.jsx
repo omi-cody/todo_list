@@ -60,16 +60,16 @@ const ToDo = () => {
     <div className='container pt-5 mt-5'>
       <header
         id='main-header'
-        className='bg-warning text-white p-4 mb-4'>
+        className='bg-white text-balck p-1 mb-2 rounded'>
         <div className='row'>
           <div className='col-md-12'>
             <h1
               id='header-title'
-              className='d-flex justify-content-between align-items-center'>
-              ToDo List
+              className='d-flex justify-content-center align-items-center'>
+              TO-DO List
               <FontAwesomeIcon
                 icon={faPencil}
-                className='float-end fs-3'
+                className='float-end fs-3 px-5'
               />
             </h1>
           </div>
