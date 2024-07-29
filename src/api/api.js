@@ -12,3 +12,6 @@ const Api = axios.create({
 export const url = 'http://localhost:5000';
 
 export const addToDoApi = (data) => Api.post('/api/todo/todo/add', data);
+
+export const loginUserApi = (data)=> Api.post('/api/user/login',data);
+export const registerUserApi = (data)=> Api.post('/api/user/create',data);
