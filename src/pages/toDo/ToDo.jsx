@@ -1,8 +1,8 @@
 import { faPencil, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { addToDoApi } from '../../api/api';
+import { addToDoApi, getToDosApi } from '../../api/api';
 
 const ToDo = () => {
   const [title, setTitle] = useState('');
@@ -10,13 +10,34 @@ const ToDo = () => {
   const [todos, setTodos] = useState([]);
   const [titleError, setTitleError] = useState('');
 
-  const handleTitle = (e) => {
-    setTitle(e.target.value);
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  const fetchTodos = async () => {
+    try {
+      const res = await getToDosApi();
+      if (res.status === 200) {
+        // Ensure res.data.toDos is an array
+        if (Array.isArray(res.data.toDos)) {
+          setTodos(res.data.toDos);
+        } else {
+          console.error('Unexpected response structure:', res.data);
+          toast.error('Failed to fetch tasks');
+        }
+      } else {
+        console.error('Error fetching tasks:', res.statusText);
+        toast.error('Failed to fetch tasks');
+      }
+    } catch (error) {
+      console.error('Network error:', error);
+      toast.error('Failed to fetch tasks');
+    }
   };
 
-  const handleDescription = (e) => {
-    setDescription(e.target.value);
-  };
+  const handleTitle = (e) => setTitle(e.target.value);
+
+  const handleDescription = (e) => setDescription(e.target.value);
 
   const validate = () => {
     let isValid = true;
@@ -30,37 +51,36 @@ const ToDo = () => {
     return isValid;
   };
 
-  const handleAddToDo = (e) => {
+  const handleAddToDo = async (e) => {
     e.preventDefault();
     const isValid = validate();
     if (!isValid) return;
 
     const data = { title, description };
 
-    addToDoApi(data)
-      .then((res) => {
-        if (res.data.success === false) {
-          toast.error(res.data.message);
-        } else {
-          toast.success(res.data.message);
-          // Add the new to-do to the local state
-          setTodos([...todos, data]);
-          // Clear the input fields
-          setTitle('');
-          setDescription('');
-        }
-      })
-      .catch((error) => {
-        toast.error('Failed to add task');
-        console.error(error);
-      });
+    try {
+      const res = await addToDoApi(data);
+      if (res.data.success === false) {
+        toast.error(res.data.message);
+      } else {
+        toast.success(res.data.message);
+        // Refresh the list of to-dos
+        fetchTodos();
+        // Clear the input fields
+        setTitle('');
+        setDescription('');
+      }
+    } catch (error) {
+      toast.error('Failed to add task');
+      console.error(error);
+    }
   };
 
   return (
     <div className='container pt-5 mt-5'>
       <header
         id='main-header'
-        className='bg-white text-balck p-1 mb-2 rounded'>
+        className='bg-white text-black p-1 mb-2 rounded'>
         <div className='row'>
           <div className='col-md-12'>
             <h1
@@ -107,7 +127,7 @@ const ToDo = () => {
               </button>
             </div>
             <div className='list-group'>
-              {todos.length > 0 ? (
+              {Array.isArray(todos) && todos.length > 0 ? (
                 todos.map((todo, index) => (
                   <div
                     key={index}
