@@ -1,16 +1,47 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const Navbar = () => {
+  const[time,settime]=useState(new Date());
+
+    useEffect(()=>{
+        const intervalId=setInterval(() => {
+            settime(new Date());
+        },1000);
+
+        return()=>{
+            clearInterval(intervalId);
+        };
+
+
+    },[]);
+
+    function formatClock(){
+        let hours = time.getHours();
+        const minutes = time.getMinutes();
+        const seconds=time.getSeconds();
+        const meridim = hours >=12? "PM":"AM";
+
+
+        hours = hours % 12 || 12;
+
+        return `${padZero(hours)}:${padZero(minutes)}:${padZero(seconds)} ${meridim}`;
+
+    }
+
+    function padZero(number){
+        return (number < 10 ? "0" : "") + number;
+
+    }
   return (
     <>
       <nav className='navbar navbar-expand-lg navbar-light bg-light shadow-sm position-absolute top-0 start-0 end-0 mx-4 my-3 py-2 rounded'>
         <div className='container-fluid'>
-          <a
+          <Link
             className='navbar-brand font-weight-bolder ms-lg-0 ms-3'
-            href='#'>
-            Material Dashboard 2
-          </a>
+            to='/Dashboard'>
+            To-Do
+          </Link>
           <button
             className='navbar-toggler shadow-none ms-2'
             type='button'
@@ -61,19 +92,11 @@ const Navbar = () => {
             </ul>
             <ul className='navbar-nav d-lg-flex d-none'>
               <li className='nav-item d-flex align-items-center'>
-                <a
-                  className='btn btn-outline-primary btn-sm mb-0 me-2'
-                  target='_blank'
-                  href='https://www.creative-tim.com/builder?ref=navbar-material-dashboard'>
-                  Online Builder
-                </a>
-              </li>
-              <li className='nav-item'>
-                <a
-                  href='https://www.creative-tim.com/product/material-dashboard'
-                  className='btn btn-sm mb-0 me-1 bg-gradient-dark'>
-                  Free download
-                </a>
+                <div className="clock-container">
+                  <div className="clock">
+                    <span>{formatClock()}</span>
+                  </div>
+                </div>
               </li>
             </ul>
           </div>
