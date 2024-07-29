@@ -5,22 +5,24 @@ import Dashboard from './pages/dashboard/Dashboard';
 import ToDo from './pages/toDo/ToDo';
 import SignIn from './pages/signIn/SignIn';
 
+const userId = '66a72bdb234ef7103d58c850';
+
 function App() {
   return (
     <Router>
-      <Navbar></Navbar>
+      <Navbar />
       <Routes>
         <Route
           path='/todo'
           element={<ToDo />}
-        />{' '}
+        />
         <Route
           path='/dashboard'
-          element={<Dashboard />}
-        />1
+    element={<Dashboard userId={userId} />}        />
         <Route
         path='/signIn'
         element={<SignIn/>}
+      
         />
       </Routes>
     </Router>
