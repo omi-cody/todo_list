@@ -1,14 +1,25 @@
-import { faPencil, faPlus } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCheck,
+  faPencil,
+  faPlus,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
-import { addToDoApi, getToDosApi } from '../../api/api';
+import {
+  addToDoApi,
+  deleteToDoApi,
+  getToDosApi,
+  updateToDoApi,
+} from '../../api/api';
 
 const ToDo = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [todos, setTodos] = useState([]);
   const [titleError, setTitleError] = useState('');
+  const [editId, setEditId] = useState(null);
 
   useEffect(() => {
     fetchTodos();
@@ -18,7 +29,6 @@ const ToDo = () => {
     try {
       const res = await getToDosApi();
       if (res.status === 200) {
-        // Ensure res.data.toDos is an array
         if (Array.isArray(res.data.toDos)) {
           setTodos(res.data.toDos);
         } else {
@@ -51,7 +61,7 @@ const ToDo = () => {
     return isValid;
   };
 
-  const handleAddToDo = async (e) => {
+  const handleAddOrEditToDo = async (e) => {
     e.preventDefault();
     const isValid = validate();
     if (!isValid) return;
@@ -59,19 +69,59 @@ const ToDo = () => {
     const data = { title, description };
 
     try {
-      const res = await addToDoApi(data);
+      let res;
+      if (editId) {
+        res = await updateToDoApi(editId, data);
+      } else {
+        res = await addToDoApi(data);
+      }
       if (res.data.success === false) {
         toast.error(res.data.message);
       } else {
         toast.success(res.data.message);
-        // Refresh the list of to-dos
         fetchTodos();
-        // Clear the input fields
         setTitle('');
         setDescription('');
+        setEditId(null);
       }
     } catch (error) {
-      toast.error('Failed to add task');
+      toast.error('Failed to add/update task');
+      console.error(error);
+    }
+  };
+
+  const handleDeleteToDo = async (id) => {
+    try {
+      const res = await deleteToDoApi(id);
+      if (res.data.success) {
+        toast.success(res.data.message);
+        fetchTodos();
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error('Failed to delete task');
+      console.error(error);
+    }
+  };
+
+  const handleEditToDo = (todo) => {
+    setTitle(todo.title);
+    setDescription(todo.description);
+    setEditId(todo._id);
+  };
+
+  const handleStatusUpdate = async (id) => {
+    try {
+      const res = await updateToDoApi(id, { status: 'Completed' });
+      if (res.data.success) {
+        toast.success(res.data.message);
+        fetchTodos();
+      } else {
+        toast.error(res.data.message);
+      }
+    } catch (error) {
+      toast.error('Failed to update status');
       console.error(error);
     }
   };
@@ -80,7 +130,7 @@ const ToDo = () => {
     <div className='container pt-5 mt-5'>
       <header
         id='main-header'
-        className='bg-white text-black p-1 mb-2 rounded'>
+        className='bg-primary text-white p-3 mb-4 rounded shadow'>
         <div className='row'>
           <div className='col-md-12'>
             <h1
@@ -89,60 +139,86 @@ const ToDo = () => {
               TO-DO List
               <FontAwesomeIcon
                 icon={faPencil}
-                className='float-end fs-3 px-5'
+                className='ms-3'
               />
             </h1>
           </div>
         </div>
       </header>
-      <form onSubmit={handleAddToDo}>
-        <div className='card'>
-          <div className='card-header'>
-            <h5 className='mb-0'>Add a new task</h5>
+      <form onSubmit={handleAddOrEditToDo}>
+        <div className='card shadow'>
+          <div className='card-header bg-secondary text-white'>
+            <h5 className='mb-0'>{editId ? 'Edit Task' : 'Add a New Task'}</h5>
           </div>
           <div className='card-body'>
-            <div className='input-group mb-3'>
+            <div className='mb-3'>
               <input
                 type='text'
                 className={`form-control ${titleError ? 'is-invalid' : ''}`}
                 id='title'
-                placeholder='Enter item to do...'
+                placeholder='Enter task title...'
                 value={title}
                 onChange={handleTitle}
               />
               <div className='invalid-feedback'>{titleError}</div>
+            </div>
+            <div className='mb-3'>
               <input
                 type='text'
                 className='form-control'
                 id='description'
-                placeholder='Enter description...'
+                placeholder='Enter task description...'
                 value={description}
                 onChange={handleDescription}
               />
-              <button
-                type='submit'
-                className='btn btn-primary'
-                id='addToDo'>
-                <FontAwesomeIcon icon={faPlus} /> Add
-              </button>
             </div>
-            <div className='list-group'>
-              {Array.isArray(todos) && todos.length > 0 ? (
-                todos.map((todo, index) => (
-                  <div
-                    key={index}
-                    className='list-group-item list-group-item-action'>
-                    <h5 className='mb-1'>{todo.title}</h5>
-                    <p className='mb-1'>{todo.description}</p>
-                  </div>
-                ))
-              ) : (
-                <p className='text-center text-muted'>No tasks added yet.</p>
-              )}
-            </div>
+            <button
+              type='submit'
+              className='btn btn-primary w-100'>
+              <FontAwesomeIcon icon={faPlus} />{' '}
+              {editId ? 'Update Task' : 'Add Task'}
+            </button>
           </div>
         </div>
       </form>
+      <div className='mt-4'>
+        <div className='list-group'>
+          {Array.isArray(todos) && todos.length > 0 ? (
+            todos.map((todo) => (
+              <div
+                key={todo._id}
+                className='list-group-item list-group-item-action d-flex justify-content-between align-items-center shadow-sm mb-2'>
+                <div>
+                  <h5 className='mb-1'>{todo.title}</h5>
+                  <p className='mb-1'>{todo.description}</p>
+                </div>
+                <div className='d-flex align-items-center'>
+                  <span className='badge bg-info text-dark me-3'>
+                    {todo.status}
+                  </span>
+                  <button
+                    className='btn btn-success btn-sm me-2'
+                    onClick={() => handleStatusUpdate(todo._id)}>
+                    <FontAwesomeIcon icon={faCheck} /> Complete
+                  </button>
+                  <button
+                    className='btn btn-primary btn-sm me-2'
+                    onClick={() => handleEditToDo(todo)}>
+                    <FontAwesomeIcon icon={faPencil} /> Edit
+                  </button>
+                  <button
+                    className='btn btn-danger btn-sm'
+                    onClick={() => handleDeleteToDo(todo._id)}>
+                    <FontAwesomeIcon icon={faTrash} /> Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className='text-center text-muted'>No tasks added yet.</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
