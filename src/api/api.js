@@ -19,6 +19,10 @@ export const url = 'http://localhost:5000';
 export const addToDoApi = (data) =>
   Api.post('/api/todo/todo/add', data, config);
 export const getToDosApi = () => Api.get('/api/todo/todo/get', config);
+export const updateToDoApi = (id, data) =>
+  Api.put(`/api/todo/todo/edit/${id}`, data, config);
+export const deleteToDoApi = (id) =>
+  Api.delete(`/api/todo/todo/delete/${id}`, config);
 
 // ================================ USER API =================================
 export const loginUserApi = (data) => Api.post('/api/user/login', data);
