@@ -120,7 +120,7 @@ const SignIn = () => {
         </form>
         <div className='text-center text-sm mt-3'>
           <Link
-            to='/signUp'
+            to='/signUpk'
             className='text-decoration-none text-secondary'>
             Don't Have an Account?
           </Link>

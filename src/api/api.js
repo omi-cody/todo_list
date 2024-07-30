@@ -8,22 +8,31 @@ const Api = axios.create({
     'Content-Type': 'application/json',
   },
 });
-const config = {
+
+// Helper function to get token from localStorage
+const getAuthConfig = () => ({
   headers: {
-    authorization: `Bearer ${localStorage.getItem('token')}`,
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
   },
-};
-export const url = 'http://localhost:5000';
+});
 
 // =================================== TO DO API =================================
 export const addToDoApi = (data) =>
-  Api.post('/api/todo/todo/add', data, config);
-export const getToDosApi = () => Api.get('/api/todo/todo/get', config);
+  Api.post('/api/todo/todo/add', data, getAuthConfig());
+
+export const getToDosApi = () =>
+  Api.get('/api/todo/todo/get', getAuthConfig());
+
 export const updateToDoApi = (id, data) =>
-  Api.put(`/api/todo/todo/edit/${id}`, data, config);
+  Api.put(`/api/todo/todo/edit/${id}`, data, getAuthConfig());
+
 export const deleteToDoApi = (id) =>
-  Api.delete(`/api/todo/todo/delete/${id}`, config);
+  Api.delete(`/api/todo/todo/delete/${id}`, getAuthConfig());
+
+export const updateStatusApi = (id,status) =>
+  Api.put(`/api/todo/todo/status/${id}`, status, getAuthConfig()); // No body needed for status update
 
 // ================================ USER API =================================
 export const loginUserApi = (data) => Api.post('/api/user/login', data);
+
 export const registerUserApi = (data) => Api.post('/api/user/create', data);

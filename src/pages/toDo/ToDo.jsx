@@ -7,22 +7,32 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import {
   addToDoApi,
   deleteToDoApi,
   getToDosApi,
+  updateStatusApi,
   updateToDoApi,
 } from '../../api/api';
 
 const ToDo = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [date, setDueDate] = useState('');
   const [todos, setTodos] = useState([]);
   const [titleError, setTitleError] = useState('');
   const [editId, setEditId] = useState(null);
+  const [intervalId, setIntervalId] = useState(null);
 
   useEffect(() => {
     fetchTodos();
+
+    // Set up polling
+    const id = setInterval(fetchTodos, 1000); // Fetch every 5 seconds
+    setIntervalId(id);
+
+    return () => clearInterval(id); // Cleanup on component unmount
   }, []);
 
   const fetchTodos = async () => {
@@ -49,6 +59,8 @@ const ToDo = () => {
 
   const handleDescription = (e) => setDescription(e.target.value);
 
+  const handleDueDate = (e) => setDueDate(e.target.value);
+
   const validate = () => {
     let isValid = true;
     setTitleError('');
@@ -66,7 +78,7 @@ const ToDo = () => {
     const isValid = validate();
     if (!isValid) return;
 
-    const data = { title, description };
+    const data = { title, description, date };
 
     try {
       let res;
@@ -82,6 +94,7 @@ const ToDo = () => {
         fetchTodos();
         setTitle('');
         setDescription('');
+        setDueDate('');
         setEditId(null);
       }
     } catch (error) {
@@ -90,39 +103,71 @@ const ToDo = () => {
     }
   };
 
-  const handleDeleteToDo = async (id) => {
-    try {
-      const res = await deleteToDoApi(id);
-      if (res.data.success) {
-        toast.success(res.data.message);
-        fetchTodos();
-      } else {
-        toast.error(res.data.message);
-      }
-    } catch (error) {
-      toast.error('Failed to delete task');
-      console.error(error);
-    }
-  };
-
   const handleEditToDo = (todo) => {
     setTitle(todo.title);
     setDescription(todo.description);
+    setDueDate(todo.date ? todo.date.split('T')[0] : ''); // Set date in YYYY-MM-DD format
     setEditId(todo._id);
   };
 
-  const handleStatusUpdate = async (id) => {
+  const handleStatusUpdate = async (id, status) => {
+    const newStatus = status === 'Completed' ? 'Pending' : 'Completed';
+
     try {
-      const res = await updateToDoApi(id, { status: 'Completed' });
+      const res = await updateStatusApi(id, { status: newStatus });
+
       if (res.data.success) {
         toast.success(res.data.message);
-        fetchTodos();
       } else {
         toast.error(res.data.message);
       }
     } catch (error) {
       toast.error('Failed to update status');
-      console.error(error);
+      console.error('Status update error:', error);
+    }
+  };
+
+  const handleDeleteToDo = async (id) => {
+    const result = await Swal.fire({
+      title: 'Are you sure?',
+      text: "You won't be able to revert this!",
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'No, cancel!',
+      customClass: {
+        confirmButton: 'btn btn-primary w-xs me-2 mt-2',
+        cancelButton: 'btn btn-danger w-xs mt-2',
+      },
+      buttonsStyling: false,
+      showCloseButton: true,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await deleteToDoApi(id);
+        console.log('Delete response:', res);
+
+        if (res.data.success) {
+          toast.success(res.data.message);
+          fetchTodos();
+        } else {
+          toast.error(res.data.message || 'Failed to delete task');
+        }
+      } catch (error) {
+        console.error('Delete error:', error);
+        toast.error('Failed to delete task');
+      }
+    } else if (result.dismiss === Swal.DismissReason.cancel) {
+      Swal.fire({
+        title: 'Cancelled',
+        text: 'Your task is safe :)',
+        icon: 'error',
+        customClass: {
+          confirmButton: 'btn btn-primary mt-2',
+        },
+        buttonsStyling: false,
+      });
     }
   };
 
@@ -136,7 +181,7 @@ const ToDo = () => {
             <h1
               id='header-title'
               className='d-flex justify-content-center align-items-center'>
-              TO-DO List
+              TODO Task
               <FontAwesomeIcon
                 icon={faPencil}
                 className='ms-3'
@@ -172,12 +217,24 @@ const ToDo = () => {
                 onChange={handleDescription}
               />
             </div>
-            <button
-              type='submit'
-              className='btn btn-primary w-100'>
-              <FontAwesomeIcon icon={faPlus} />{' '}
-              {editId ? 'Update Task' : 'Add Task'}
-            </button>
+            <div className='mb-3'>
+              <input
+                type='date'
+                className='form-control'
+                id='date'
+                placeholder='Select date...'
+                value={date}
+                onChange={handleDueDate}
+              />
+            </div>
+            <div className='text-end'>
+              <button
+                type='submit'
+                className='btn btn-primary'>
+                <FontAwesomeIcon icon={faPlus} />{' '}
+                {editId ? 'Update Task' : 'Add Task'}
+              </button>
+            </div>
           </div>
         </div>
       </form>
@@ -189,18 +246,20 @@ const ToDo = () => {
                 key={todo._id}
                 className='list-group-item list-group-item-action d-flex justify-content-between align-items-center shadow-sm mb-2'>
                 <div>
-                  <h5 className='mb-1'>{todo.title}</h5>
-                  <p className='mb-1'>{todo.description}</p>
+                  <div className='d-flex align-items-center'>
+                    <label
+                      htmlFor={`todo-${todo._id}`}
+                      className={todo.status === 'Completed' ? 'text-decoration-line-through' : ''}>
+                      <h5 className='mb-1'>{todo.title}</h5>
+                      <p className='mb-1'>{todo.description}</p>
+                      {todo.date && <small className='text-muted'>Due: {new Date(todo.date).toLocaleDateString()}</small>}
+                    </label>
+                  </div>
                 </div>
                 <div className='d-flex align-items-center'>
                   <span className='badge bg-info text-dark me-3'>
                     {todo.status}
                   </span>
-                  <button
-                    className='btn btn-success btn-sm me-2'
-                    onClick={() => handleStatusUpdate(todo._id)}>
-                    <FontAwesomeIcon icon={faCheck} /> Complete
-                  </button>
                   <button
                     className='btn btn-primary btn-sm me-2'
                     onClick={() => handleEditToDo(todo)}>
@@ -211,11 +270,18 @@ const ToDo = () => {
                     onClick={() => handleDeleteToDo(todo._id)}>
                     <FontAwesomeIcon icon={faTrash} /> Delete
                   </button>
+                  <input
+                    type='checkbox'
+                    id={`todo-${todo._id}`}
+                    checked={todo.status ==='Completed'}
+                    onChange={() => handleStatusUpdate(todo._id, todo.status)}
+                    className='form-check-input  me-2 ms-4'
+                  />
                 </div>
               </div>
             ))
           ) : (
-            <p className='text-center text-muted'>No tasks added yet.</p>
+            <p className='text-center text-danger'>No tasks added yet.</p>
           )}
         </div>
       </div>

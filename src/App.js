@@ -7,6 +7,7 @@ import SignIn from './pages/signIn/SignIn';
 import SignUp from './pages/signUp/SignUp';
 import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
+import Sidebar from './components/sidebar/Sidebar';
 
 const userId = '66a72bdb234ef7103d58c850';
 
@@ -14,6 +15,7 @@ function App() {
   return (
     <Router>
       <Navbar />
+      {/* <Sidebar/> */}
       <ToastContainer />
       <Routes>
         <Route
